@@ -1,15 +1,18 @@
+/**
+ * WordPress dependencies.
+ */
 import { createRoot } from '@wordpress/element';
+/**
+ * Internal dependencies.
+ */
 import { SocketsWpApp } from './../components';
 
 const createSocketsWpRoot = ( id, config ) => {
 	const { selector, mode = 'panel', sockets } = config;
 
 	if ( typeof id !== 'string' || id.length === 0 ) {
-		console.error( 'Sockets WP App: Invalid id' );
 		return;
 	}
-
-	console.log( 'Sockets WP App is running: ' + id );
 
 	// use the selector if exists, otherwise try the #appId as fallback.
 	let element = document.querySelector( selector );
@@ -27,6 +30,4 @@ const createSocketsWpRoot = ( id, config ) => {
 	}
 };
 
-export {
-	createSocketsWpRoot
-}
+export { createSocketsWpRoot };

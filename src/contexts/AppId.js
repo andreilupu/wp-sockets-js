@@ -1,4 +1,4 @@
-import { createContext } from 'react';
+import { createContext } from '@wordpress/element';
 
 const AppIdContext = createContext( null );
 

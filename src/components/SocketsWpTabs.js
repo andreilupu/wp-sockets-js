@@ -4,9 +4,15 @@ const SocketsWpTabs = ( { sockets } ) => {
 			{ sockets.map( ( socket ) => {
 				const { id, label, type } = socket;
 
-				return <div key={ id }>{ label }</div>;
+				return (
+					<div key={ id } className={ 'socket-type-' + type }>
+						{ label }
+					</div>
+				);
 			} ) }
 		</div>
 	);
 };
-export default SocketsWpTabs;
+export {
+	SocketsWpTabs
+};

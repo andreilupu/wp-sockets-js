@@ -1,5 +1,5 @@
 import { useSelect, useDispatch } from '@wordpress/data';
-import { useCallback } from 'react';
+import { useCallback } from '@wordpress/element';
 
 /**
  * Fetches relevant entity record states for use in the configurator.
@@ -22,7 +22,10 @@ const useSocketEntities = () => {
 	const hasUndo = useSelect( ( select ) => select( 'core' ).hasRedo() );
 
 	const saveRecords = useCallback( () => {
-		hasUnsavedEdits && saveEntityRecord( 'root', 'site', editedEntities );
+		return (
+			hasUnsavedEdits &&
+			saveEntityRecord( 'root', 'site', editedEntities )
+		);
 	}, [ editedEntities, hasUnsavedEdits, saveEntityRecord ] );
 
 	return {

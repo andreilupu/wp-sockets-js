@@ -1,10 +1,15 @@
+/**
+ * WordPress dependencies.
+ */
 import { TextareaControl } from '@wordpress/components';
 import { useContext } from '@wordpress/element';
-import { AppIdContext, DataHelperContext } from './../../contexts';
+/**
+ * Internal dependencies.
+ */
+import { DataHelperContext } from './../../contexts';
 
 const TextareaSocket = ( { options } ) => {
 	const { id, label } = options;
-	// const appId = useContext( AppIdContext ); // not actually needed, right?
 	const dataHelper = useContext( DataHelperContext );
 	const value = dataHelper.getSetting( id );
 

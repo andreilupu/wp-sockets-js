@@ -1,14 +1,33 @@
-import { renderSocket } from './index';
+/**
+ * WordPress dependencies.
+ */
+import { Button } from '@wordpress/components';
+import { __ } from '@wordpress/i18n';
 
-const SocketsWpPanel = ( { sockets } ) => {
+/**
+ * Internal dependencies.
+ */
+import { useRenderedSocket } from './../renders';
+
+const SocketsWpPanel = ( { sockets, withSaveButton } ) => {
 	return (
 		<div>
 			{ sockets.map( ( socket ) => {
-				const { id, label, type } = socket;
-
-				return renderSocket( type, socket );
+				return useRenderedSocket( socket );
 			} ) }
+			{ withSaveButton && (
+				<Button
+					variant="primary"
+					// onClick={ dataHelper.saveSettings }
+					// isBusy={ dataHelper.isSaving }
+				>
+					{ __( 'Save' ) }
+				</Button>
+			) }
 		</div>
 	);
 };
-export default SocketsWpPanel;
+
+export {
+	SocketsWpPanel
+};
