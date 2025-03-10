@@ -1,8 +1,14 @@
 {
-  "name": "WpSockets",
-  "version": "0.0.1",
-  "description": "A flexible package for building WordPress Admin Pages.",
-  "main": "index.js",
+  "name": "@wp-sockets/js",
+  "version": "0.1.0-alpha.1",
+  "description": "A flexible package for building WordPress Admin Pages using React components",
+  "main": "build/index.js",
+  "module": "build/index.js",
+  "types": "build/index.d.ts",
+  "files": [
+    "build",
+    "src"
+  ],
   "scripts": {
     "build": "wp-scripts build",
     "check-engines": "wp-scripts check-engines",
@@ -13,17 +19,32 @@
     "lint:md:docs": "wp-scripts lint-md-docs",
     "lint:pkg-json": "wp-scripts lint-pkg-json",
     "packages-update": "wp-scripts packages-update",
-    "plugin-zip": "wp-scripts plugin-zip",
+    "prepare": "npm run build",
     "start": "wp-scripts start",
     "test:e2e": "wp-scripts test-e2e",
     "test:unit": "wp-scripts test-unit-js"
   },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
+  "peerDependencies": {
+    "@wordpress/components": "^23.0.0",
     "@wordpress/compose": "^6.30.0",
     "@wordpress/data": "^9.23.0",
     "@wordpress/element": "^5.29.0",
     "@wordpress/scripts": "^27.3.0"
-  }
+  },
+  "keywords": [
+    "wordpress",
+    "admin",
+    "react",
+    "components"
+  ],
+  "author": "Andrei Lupu",
+  "license": "GPL-2.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andreilupu/wp-sockets-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/andreilupu/wp-sockets-js/issues"
+  },
+  "homepage": "https://github.com/andreilupu/wp-sockets-js#readme"
 }
