@@ -2,9 +2,10 @@
  * WordPress dependencies.
  */
 // import { useCallback } from '@wordpress/element';
-import { useDispatch, useSelect } from '@wordpress/data';
+
 // import { useEntityRecord } from '@wordpress/core-data'; // I really wish this would work.
 import { store as coreDataStore } from '@wordpress/core-data';
+import { useDispatch, useSelect } from '@wordpress/data';
 
 /**
  * Desc:
