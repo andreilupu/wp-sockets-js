@@ -1,74 +1,79 @@
-# WIP / Only a PoC atm
-I'm just putting thoughts out in the wild. I'm not even sure about the name.
-Might be another dead side-project just as the [initial idea](https://github.com/andreilupu/socket)
+# WP Sockets (JS)
 
-# WP Sockets
+A flexible, React-based library for building WordPress Admin Pages using native WordPress components.
 
-Proof-of-concept of an Admin Settings page build with WordPress components only.
+## Overview
 
-Key points of this framework:
+`@wp-sockets/js` provides a declarative way to build complex WordPress admin interfaces using a "socket" architecture. It leverages standard `@wordpress/components` to ensure your admin pages look and feel native to WordPress.
 
-* Simple & reliable.
-* Build within WordPress with WordPress components, principles and coding standards.
-* Flexible as much as possible.
+## Features
 
-## Description
+*   **Native Look & Feel**: Built on top of `@wordpress/components`.
+*   **Declarative Configuration**: Define your UI structure using simple JSON-like objects.
+*   **Extensible**: Easily register custom socket types.
+*   **State Management**: Built-in data helpers for handling options and user meta.
+*   **Responsive**: Built-in responsive grid system.
 
-Built with `@wordpress-scripts` for compiling and reuses `@wordpress/elements`/`@wordpress/components` as much as possible.
+## Installation
 
-## How to use?
-
-This repository handles only the Browser side of the framework which means that you will be responsible for registering and enqueuing assets.
-If you simply want to create an Admin Page without too much headache you can use the (SocketsWP composer package)[#to-do] which will use the latest version of this package.
-
-You can install it via npm with `npm install sockets-wp`
-
-After that you will need to enqueue the style and assets on your admin page, which you will also need to create it on your PHP side.
-
-
-```
-// @TODO add an example.
+```bash
+npm install @wp-sockets/js
 ```
 
-Once you have an admin page with the style and script properly loaded you can create a SocketsWp componet.
+## Usage
 
+### 1. Enqueue Assets (PHP)
+
+First, ensure you have a WordPress admin page registered and assets enqueued. You can use the companion PHP library (coming soon) or manually enqueue your script.
+
+### 2. Initialize the App (JS)
+
+In your JavaScript entry point:
+
+```javascript
+import { createSocketsWpRoot } from '@wp-sockets/js';
+
+// Configuration for your admin page
+const config = {
+    selector: '#my-admin-page-root', // The DOM element ID
+    mode: 'tabs', // 'tabs' or 'panel'
+    title: 'My Admin Page',
+    withSaveButton: true,
+    autosave: false,
+    sockets: [
+        {
+            id: 'general_settings',
+            type: 'group',
+            label: 'General Settings',
+            children: [
+                {
+                    id: 'my_text_field',
+                    type: 'text',
+                    label: 'Example Text Field',
+                },
+                {
+                    id: 'my_textarea',
+                    type: 'textarea',
+                    label: 'Description',
+                }
+            ]
+        }
+    ]
+};
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    createSocketsWpRoot('my_app_id', config);
+});
 ```
-import { createSocketsWpRoot } from 'sockets-wp';
 
-createSocketsWpRoot( 'sockets_example', {
-	selector: '.sockets-example-react-apps',
-	sockets: [
-		{
-			id: 'text_example',
-			type: 'text',
-			label: 'Text',
-		},
-		{
-			id: 'textarea_example',
-			type: 'textarea',
-			label: 'Textarea',
-		},
-	],
-} );
-```
+## Available Socket Types
 
-Where the selector is a present element in your admin page.
+*   `text`: Simple text input.
+*   `textarea`: Textarea input.
+*   `group`: Container for other sockets, supports grid layouts.
+*   `repeater`: Repeatable list of sockets.
 
-Alternative
+## License
 
-You can also use the SocketWP component yourself like this
-
-```
-import { createRoot } from '@wordpress/element';
-import { SocketsWpApp } from 'sockets-wp';
-
-let element = document.querySelector( '.selector' );
-
-// if the element exists, render the app
-if ( element ) {
-	const root = createRoot( element );
-	root.render(
-		<SocketsWpApp id={ id } options={ options } sockets={ sockets } />
-	);
-}
-```
+GPL-2.0-or-later
