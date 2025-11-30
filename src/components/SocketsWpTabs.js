@@ -10,45 +10,45 @@ import { useContext } from '@wordpress/element';
  */
 import { SocketListContext } from '../contexts';
 
-const SocketsWpTabs = ( { sockets } ) => {
-	const RenderSocketList = useContext( SocketListContext );
+const SocketsWpTabs = ({ sockets }) => {
+	const RenderSocketList = useContext(SocketListContext);
 
-	if ( ! sockets || sockets.length === 0 ) {
+	if (!sockets || sockets.length === 0) {
 		return null;
 	}
 
-	const tabs = sockets.map( ( socket ) => ( {
+	const tabs = sockets.map((socket) => ({
 		name: socket.id,
-		title: socket.label || socket.id,
-		className: `socket-tab-${ socket.id }`,
+		title: socket.title || socket.label || socket.id,
+		className: `socket-tab-${socket.id}`,
 		// Pass the original socket data along so we can use it in the render function
 		socketData: socket,
-	} ) );
+	}));
 
 	return (
 		<TabPanel
 			className="wp-sockets-tabs"
 			activeClass="is-active"
-			tabs={ tabs }
+			tabs={tabs}
 		>
-			{ ( tab ) => {
+			{(tab) => {
 				const socket = tab.socketData;
 				// If the socket has children, render them.
 				// Otherwise, render the socket itself as the content.
 				const contentSockets = socket.children
 					? socket.children
-					: [ socket ];
+					: [socket];
 
 				return (
-					<div className="tab-content" key={ socket.id }>
+					<div className="tab-content" key={socket.id}>
 						<Card>
 							<CardBody>
-								<RenderSocketList sockets={ contentSockets } />
+								<RenderSocketList sockets={contentSockets} />
 							</CardBody>
 						</Card>
 					</div>
 				);
-			} }
+			}}
 		</TabPanel>
 	);
 };

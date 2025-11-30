@@ -1,6 +1,6 @@
 {
 	"name": "@andreilupu/wp-sockets-js",
-	"version": "0.1.0-alpha.3",
+	"version": "0.1.0-alpha.4",
 	"description": "A flexible package for building WordPress Admin Pages using React components",
 	"source": "src/index.js",
 	"main": "dist/index.js",
@@ -20,7 +20,7 @@
 	],
 	"scripts": {
 		"build": "wp-scripts build",
-		"build:package": "microbundle --name WPSockets --jsx React.createElement --external react,react-dom,@wordpress/element,@wordpress/hooks,@wordpress/components,@wordpress/data,@wordpress/compose,@wordpress/i18n,@wordpress/core-data",
+		"build:package": "microbundle --name WPSockets --jsx React.createElement --external react,react-dom,@wordpress/element,@wordpress/hooks,@wordpress/components,@wordpress/data,@wordpress/compose,@wordpress/i18n,@wordpress/core-data --globals react=React,react-dom=ReactDOM,@wordpress/element=wp.element,@wordpress/hooks=wp.hooks,@wordpress/components=wp.components,@wordpress/data=wp.data,@wordpress/compose=wp.compose,@wordpress/i18n=wp.i18n,@wordpress/core-data=wp.coreData",
 		"check-engines": "wp-scripts check-engines",
 		"check-licenses": "wp-scripts check-licenses",
 		"format": "wp-scripts format",
