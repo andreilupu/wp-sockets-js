@@ -9,22 +9,23 @@ import { useContext } from '@wordpress/element';
  */
 import { DataHelperContext } from './../../contexts';
 
-const NumberSocket = ( { options } ) => {
+const NumberSocket = ({ options }) => {
 	const { id, label, min, max, step } = options;
-	const dataHelper = useContext( DataHelperContext );
-	const value = dataHelper.getSetting( id );
+	const dataHelper = useContext(DataHelperContext);
+	const value = dataHelper.getSetting(id);
 
 	return (
 		<InputControl
-			label={ label }
-			value={ value }
+			label={label}
+			value={value}
 			type="number"
-			min={ min }
-			max={ max }
-			step={ step }
-			onChange={ ( nextValue ) => {
-				dataHelper.setSetting( id, nextValue );
-			} }
+			min={min}
+			max={max}
+			step={step}
+			onChange={(nextValue) => {
+				dataHelper.setSetting(id, nextValue);
+			}}
+			__next40pxDefaultSize
 		/>
 	);
 };

@@ -2,8 +2,9 @@
  * WordPress dependencies.
  */
 // import { useCallback } from '@wordpress/element';
-import { useDispatch, useSelect } from '@wordpress/data';
+
 import { store as coreDataStore } from '@wordpress/core-data';
+import { useDispatch, useSelect } from '@wordpress/data';
 
 /**
  * Desc: @TODO Describe the consept of the dataHelper since this can be filtered and used diferently.
@@ -22,32 +23,47 @@ const useOptionDataHelper = ( appId ) => {
 	// 	status,
 	// } = useEntityRecord( 'root', 'site' );
 
-	const { record, editedEntities, isSaving } = useSelect( ( select ) => {
-		const _record = select( 'core' ).getEntityRecord( 'root', 'site' );
-		const edits = select( 'core' ).getEntityRecordEdits( 'root', 'site' );
+	const { record, editedEntities, isSaving, isResolving } = useSelect(
+		( select ) => {
+			const _record = select( 'core' ).getEntityRecord( 'root', 'site' );
+			const edits = select( 'core' ).getEntityRecordEdits(
+				'root',
+				'site'
+			);
+			const _isResolving = select( 'core' ).isResolving(
+				'getEntityRecord',
+				[ 'root', 'site' ]
+			);
 
-		// we care only about settings under our appId.
-		return {
-			record:
-				_record && typeof _record[ appId ] !== 'undefined'
-					? _record[ appId ]
-					: null,
-			editedEntities:
-				edits && typeof edits[ appId ] !== 'undefined'
-					? edits[ appId ]
-					: null,
-			isSaving: select( 'core' ).isSavingEntityRecord( 'root', 'site' ),
-		};
-	} );
+			// we care only about settings under our appId.
+			return {
+				record:
+					_record && typeof _record[ appId ] !== 'undefined'
+						? _record[ appId ]
+						: null,
+				editedEntities:
+					edits && typeof edits[ appId ] !== 'undefined'
+						? edits[ appId ]
+						: null,
+				isSaving: select( 'core' ).isSavingEntityRecord(
+					'root',
+					'site'
+				),
+				isResolving: _isResolving,
+			};
+		}
+	);
 
 	const mergedData = { ...record, ...editedEntities };
 
-	// const hasUnsavedEdits = record && Object.keys( record ).length > 0;
+	const hasUnsavedEdits =
+		editedEntities && Object.keys( editedEntities ).length > 0;
 	const hasRedo = useSelect( ( select ) => select( 'core' ).hasUndo() );
 	const hasUndo = useSelect( ( select ) => select( 'core' ).hasRedo() );
 
 	const getSetting = ( settingId ) => {
 		if (
+			isResolving ||
 			isSaving ||
 			typeof mergedData === 'undefined' ||
 			Object.keys( mergedData ).length < 1
@@ -73,6 +89,9 @@ const useOptionDataHelper = ( appId ) => {
 	};
 
 	const saveSettings = () => {
+		if ( isResolving ) {
+			return;
+		}
 		return saveEntityRecord( 'root', 'site', { [ appId ]: mergedData } );
 	};
 
@@ -82,8 +101,9 @@ const useOptionDataHelper = ( appId ) => {
 		setSetting,
 		hasRedo,
 		hasUndo,
-		// hasUnsavedEdits,
+		hasUnsavedEdits,
 		isSaving,
+		isResolving,
 		redo,
 		undo,
 	};

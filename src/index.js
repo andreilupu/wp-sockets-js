@@ -1,32 +1,77 @@
+import './style.scss';
+import { createElement, createRoot } from '@wordpress/element';
+import { addAction, addFilter } from '@wordpress/hooks';
 import { SocketsWpApp } from './components';
-import { createSocketsWpRoot } from './utils';
+import { RenderSocketList } from './components/RenderSocketList';
+import { Group } from './components/sockets/group';
+import { NumberSocket } from './components/sockets/number';
+import { RepeaterSocket } from './components/sockets/repeater';
+import { TextSocket } from './components/sockets/text';
+import { TextareaSocket } from './components/sockets/textarea';
 
-// @TODO: This is just an example. Either the composer package will generate a config for it, or users who decides to use this package will have to create their own config.
-// either way we'll remove this.
+import {
+	useApiFetchDataHelper,
+	useOptionDataHelper,
+	useSocketEntities,
+	useSocketSetup,
+	useUserDataHelper,
+} from './hooks';
 
-// @TODO Key points that this need to cover:
-// - I should be able to create multiple sockets on the same page.
-// - I should be able to import partials from other packages but still to be able to keep it usable.
+export const createSocketsWpRoot = (id, options) => {
+	const selector = options.selector || `#wp-sockets-root-${id}`;
+	const element = document.querySelector(selector);
 
-createSocketsWpRoot( 'sockets_example', {
-	selector: '.sockets-example-react-apps',
-	// mode: 'panel', // implement this better
-	// source: 'options', // implement this: allow the config to decide if we save data to options or user meta
-	// datahelper: 'default', // another option would be allowing the config to decide which datahelper to use: 'options', 'usermeta', 'restapi', 'adminajax', etc.
-	// withSaveButton: true, // implement this: allow the config to decide if we show the save button or not. without a save button we should save on every change.
-	//-  maybe add two buttons since large admin pages might need a save button at the top and bottom.
-	sockets: [
-		{
-			id: 'text_example',
-			type: 'text',
-			label: 'Text',
-		},
-		{
-			id: 'textarea_example',
-			type: 'textarea',
-			label: 'Textarea',
-		},
-	],
-} );
+	if (!element) {
+		return;
+	}
 
-export { SocketsWpApp, createSocketsWpRoot };
+	const root = createRoot(element);
+	root.render(
+		<SocketsWpApp
+			id={id}
+			sockets={options.sockets}
+			options={options}
+			RenderSocketList={RenderSocketList}
+		/>
+	);
+};
+
+// Register sockets directly here
+
+const registerSocketType = (appId, type, component) => {
+	const uppercased = type.charAt(0).toUpperCase() + type.slice(1);
+	addFilter(
+		`${appId}Sockets.socketType${uppercased}`,
+		`${appId}Sockets`,
+		(_currentComponent, socket) => {
+			return createElement(component, { options: socket });
+		}
+	);
+};
+
+addAction('sockets.loadTypes', 'sockets', (appId) => {
+	registerSocketType(appId, 'text', TextSocket);
+	registerSocketType(appId, 'textarea', TextareaSocket);
+	registerSocketType(appId, 'number', NumberSocket);
+	registerSocketType(appId, 'group', Group);
+	registerSocketType(appId, 'repeater', RepeaterSocket);
+});
+
+export {
+	SocketsWpApp,
+	useSocketSetup,
+	useOptionDataHelper,
+	useUserDataHelper,
+	useApiFetchDataHelper,
+	useSocketEntities,
+};
+
+window.WPSockets = {
+	SocketsWpApp,
+	createSocketsWpRoot,
+	useSocketSetup,
+	useOptionDataHelper,
+	useUserDataHelper,
+	useApiFetchDataHelper,
+	useSocketEntities,
+};
