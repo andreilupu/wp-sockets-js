@@ -3,6 +3,7 @@ import { createElement, createRoot } from '@wordpress/element';
 import { addAction, addFilter } from '@wordpress/hooks';
 import { SocketsWpApp } from './components';
 import { RenderSocketList } from './components/RenderSocketList';
+import { DataFormSocket } from './components/sockets/dataform';
 import { Group } from './components/sockets/group';
 import { NumberSocket } from './components/sockets/number';
 import { RepeaterSocket } from './components/sockets/repeater';
@@ -55,6 +56,9 @@ addAction('sockets.loadTypes', 'sockets', (appId) => {
 	registerSocketType(appId, 'number', NumberSocket);
 	registerSocketType(appId, 'group', Group);
 	registerSocketType(appId, 'repeater', RepeaterSocket);
+	// Renders its children through core's DataForm. Opt-in per socket, so a
+	// page can migrate to DataForms one section at a time.
+	registerSocketType(appId, 'dataform', DataFormSocket);
 });
 
 export {
@@ -65,6 +69,14 @@ export {
 	useApiFetchDataHelper,
 	useSocketEntities,
 };
+
+export { DataFormSocket } from './components/sockets/dataform';
+export {
+	compileSockets,
+	isCompilable,
+	NATIVE_TYPE_MAP,
+	UNSUPPORTED_TYPES,
+} from './dataform/compile';
 
 window.WPSockets = {
 	SocketsWpApp,

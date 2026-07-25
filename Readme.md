@@ -71,8 +71,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
 *   `text`: Simple text input.
 *   `textarea`: Textarea input.
+*   `number`: Number input.
 *   `group`: Container for other sockets, supports grid layouts.
 *   `repeater`: Repeatable list of sockets.
+*   `dataform`: Renders its children with core's DataForms. See below.
+
+## The `dataform` socket (experimental)
+
+`dataform` renders its children through `DataForm` from
+`@wordpress/dataviews` — the same form component core is standardising on —
+instead of the hand-rolled socket controls. It is opt-in per socket, so a page
+can adopt DataForms one section at a time:
+
+```php
+[
+    'id'       => 'connection',
+    'type'     => 'dataform',
+    'label'    => 'Connection',
+    'layout'   => 'regular', // regular | panel | card | row
+    'children' => [
+        [ 'id' => 'api_url', 'type' => 'text',     'label' => 'API URL' ],
+        [ 'id' => 'enabled', 'type' => 'checkbox', 'label' => 'Enabled' ],
+        [
+            'id'      => 'model',
+            'type'    => 'select',
+            'label'   => 'Model',
+            'choices' => [ 'fast', 'accurate' ],
+        ],
+    ],
+]
+```
+
+What carries over unchanged:
+
+*   **Persistence.** `DataForm` is a controlled component, so the existing
+    `dataHelper` remains the owner of state — the option, user-meta and
+    apiFetch helpers all keep working, as does the save button.
+*   **Custom socket types.** A child whose type has no native DataForms
+    equivalent is still resolved through the
+    `{appId}Sockets.socketType{Type}` filter and rendered as a DataForms
+    custom control, so existing custom sockets need no changes.
+*   **Nothing is dropped.** `repeater` and `object` children cannot be
+    expressed as DataForms fields, so they are rendered after the form by the
+    normal WP Sockets renderer.
+
+### Requirements and caveats
+
+*   **Recent WordPress only.** DataViews is not shipped by WordPress, so it is
+    bundled into this package. Its dependency chain needs the `wp-theme` and
+    `wp-private-apis` script handles, which exist in WordPress 7.x but not in
+    6.0. The rest of the framework keeps its existing floor — only this socket
+    needs a modern WordPress.
+*   **Bundle size.** Bundling DataViews grows the WordPress build from ~119 KB
+    to ~255 KB of JS and adds ~89 KB of CSS. A future version should load it on
+    demand so pages that do not use the socket pay nothing.
+*   **Values are flattened.** DataForms keeps a flat field list, so a `group`
+    nested inside a `dataform` contributes its children to the same value
+    namespace and only nests visually.
+*   The DataForms field API is still stabilising upstream, so treat this socket
+    as experimental and keep `@wordpress/dataviews` pinned.
 
 ## License
 
