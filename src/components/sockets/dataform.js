@@ -122,7 +122,23 @@ const DataFormSocket = ( { options } ) => {
 		return null;
 	}
 
+	/*
+	 * DataForms reports a batch of edits, which can contain more than one field
+	 * (combined fields, or a layout that commits several at once).
+	 *
+	 * That batch must be applied as a single edit: `setSetting` spreads the
+	 * settings snapshot captured during the current render, so calling it in a
+	 * loop silently discards every change but the last. Prefer the batch setter
+	 * and fall back to the per-setting one only for custom data helpers that do
+	 * not implement it — accepting the caveat there, since a single-field batch
+	 * (the common case) is unaffected.
+	 */
 	const onChange = ( edits ) => {
+		if ( typeof dataHelper.setSettings === 'function' ) {
+			dataHelper.setSettings( edits );
+			return;
+		}
+
 		Object.entries( edits ).forEach( ( [ id, value ] ) => {
 			dataHelper.setSetting( id, value );
 		} );

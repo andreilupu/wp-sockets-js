@@ -12,6 +12,7 @@
 			"import": "./dist/index.module.js",
 			"require": "./dist/index.js"
 		},
+		"./style.css": "./dist/index.css",
 		"./package.json": "./package.json"
 	},
 	"files": [
@@ -20,7 +21,7 @@
 	],
 	"scripts": {
 		"build": "wp-scripts build",
-		"build:package": "microbundle --name WPSockets --jsx React.createElement --external react,react-dom,react/jsx-runtime,@wordpress/element,@wordpress/hooks,@wordpress/components,@wordpress/data,@wordpress/compose,@wordpress/i18n,@wordpress/core-data --globals react=React,react-dom=ReactDOM,react/jsx-runtime=ReactJSXRuntime,@wordpress/element=wp.element,@wordpress/hooks=wp.hooks,@wordpress/components=wp.components,@wordpress/data=wp.data,@wordpress/compose=wp.compose,@wordpress/i18n=wp.i18n,@wordpress/core-data=wp.coreData",
+		"build:package": "microbundle --name WPSockets --jsx React.createElement --external react,react-dom,react/jsx-runtime,@wordpress/element,@wordpress/hooks,@wordpress/components,@wordpress/data,@wordpress/compose,@wordpress/i18n,@wordpress/core-data,@wordpress/private-apis,@wordpress/theme,@wordpress/date,@wordpress/primitives,@wordpress/deprecated,@wordpress/keycodes,@wordpress/warning --globals react=React,react-dom=ReactDOM,react/jsx-runtime=ReactJSXRuntime,@wordpress/element=wp.element,@wordpress/hooks=wp.hooks,@wordpress/components=wp.components,@wordpress/data=wp.data,@wordpress/compose=wp.compose,@wordpress/i18n=wp.i18n,@wordpress/core-data=wp.coreData,@wordpress/private-apis=wp.privateApis,@wordpress/theme=wp.theme,@wordpress/date=wp.date,@wordpress/primitives=wp.primitives,@wordpress/deprecated=wp.deprecated,@wordpress/keycodes=wp.keycodes,@wordpress/warning=wp.warning",
 		"check-engines": "wp-scripts check-engines",
 		"check-licenses": "wp-scripts check-licenses",
 		"format": "wp-scripts format",
@@ -63,5 +64,6 @@
 	"homepage": "https://github.com/andreilupu/wp-sockets-js#readme",
 	"dependencies": {
 		"@wordpress/dataviews": "^16.0.1"
-	}
+	},
+	"style": "dist/index.css"
 }

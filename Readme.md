@@ -115,6 +115,20 @@ What carries over unchanged:
     expressed as DataForms fields, so they are rendered after the form by the
     normal WP Sockets renderer.
 
+### Stylesheet
+
+The package exports its stylesheet, which also carries the DataViews styles the
+`dataform` socket needs. Import it in your own entry point so it is emitted into
+your plugin's build:
+
+```js
+import '@andreilupu/wp-sockets-js/style.css';
+```
+
+Prefer this over enqueueing `node_modules/.../dist/index.css` directly: that
+directory is a build-time artifact that should not be web-served, and it does
+not resolve with linked or hoisted installs.
+
 ### Requirements and caveats
 
 *   **Recent WordPress only.** DataViews is not shipped by WordPress, so it is
@@ -130,6 +144,17 @@ What carries over unchanged:
     namespace and only nests visually.
 *   The DataForms field API is still stabilising upstream, so treat this socket
     as experimental and keep `@wordpress/dataviews` pinned.
+
+## Data helper API: `setSettings`
+
+Data helpers now expose `setSettings( { id: value, ... } )` alongside
+`setSetting( id, value )`, and **anything that can change more than one setting
+at a time must use it**.
+
+`setSetting` spreads the settings snapshot captured during the current render,
+so calling it in a loop silently discards every change but the last. The batch
+setter applies them as a single edit. Custom data helpers that do not implement
+`setSettings` still work — the `dataform` socket falls back to `setSetting`.
 
 ## License
 

@@ -88,6 +88,31 @@ const useOptionDataHelper = ( appId ) => {
 		editEntityRecord( 'root', 'site', undefined, edits );
 	};
 
+	/**
+	 * Apply several settings in a single edit.
+	 *
+	 * Calling `setSetting` in a loop loses data: each call spreads the
+	 * `mergedData` captured during the current render, so the second call's
+	 * snapshot does not contain the first call's change and silently discards
+	 * it. Anything that can produce more than one change at a time (a form
+	 * component reporting a batch of edits, for example) must use this instead.
+	 *
+	 * @param {Object} settings Map of setting id to value.
+	 */
+	const setSettings = ( settings ) => {
+		if ( ! settings || typeof settings !== 'object' ) {
+			return;
+		}
+
+		const edits = {
+			[ appId ]: {
+				...mergedData,
+				...settings,
+			},
+		};
+		editEntityRecord( 'root', 'site', undefined, edits );
+	};
+
 	const saveSettings = () => {
 		if ( isResolving ) {
 			return;
@@ -99,6 +124,7 @@ const useOptionDataHelper = ( appId ) => {
 		saveSettings,
 		getSetting,
 		setSetting,
+		setSettings,
 		hasRedo,
 		hasUndo,
 		hasUnsavedEdits,
