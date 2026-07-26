@@ -14,6 +14,19 @@ A flexible, React-based library for building WordPress Admin Pages using native 
 *   **State Management**: Built-in data helpers for handling options and user meta.
 *   **Responsive**: Built-in responsive grid system.
 
+## Requirements
+
+**WordPress 7.0 or newer.**
+
+This version bundles core's DataForms (`@wordpress/dataviews`), whose dependency
+chain needs the `wp-theme` script handle — WordPress 7.0 registers it, 6.8 does
+not. On an older WordPress the script's dependency chain cannot resolve, so
+WordPress prints nothing at all and the admin page comes up blank. Host
+integrations should therefore check support before enqueueing and show a notice
+instead; see [Enforcing the requirement](#enforcing-the-requirement).
+
+If you need to support WordPress 6.x, stay on `0.1.0-alpha.4`.
+
 ## Installation
 
 ```bash
@@ -131,31 +144,16 @@ not resolve with linked or hoisted installs.
 
 ### Requirements and caveats
 
-*   **This build requires WordPress 7.0 or newer — for the whole framework, not
-    just this socket.** Read this before shipping.
+*   **Needs WordPress 7.0+**, like the rest of this version — see
+    [Requirements](#requirements).
 
-    DataViews is not shipped by WordPress, so it is bundled here. Its dependency
-    chain needs the `wp-theme` script handle: WordPress 7.0 registers it, 6.8
-    does not (`wp-includes/js/dist/theme.min.js` appears in 7.0 and is absent in
-    6.8). Because dependency extraction lists `wp-theme` in the generated asset
-    file, WordPress 6.8 refuses to print the script *and silently skips its
-    entire dependency chain* — verified on 6.8: no script tag, no inline
-    bootstrap, `window.wp.components` undefined, nothing renders on the page at
-    all. Not only the `dataform` socket: **the whole admin app.**
-
-    So including this socket in the default build raises the framework's floor.
-    Supporting older WordPress requires shipping DataViews as a separate,
-    conditionally enqueued build — which this version does not yet do.
-
-*   **The runtime guard does not rescue old WordPress.** `canUseDataForms()`
-    checks the host globals and the socket degrades to the standard renderer
-    when they are missing, and the DataForm is wrapped in an error boundary that
-    also degrades rather than showing a dead panel. That is real protection
-    against DataViews failing *once loaded* — but it cannot help on 6.8, where
-    the script never executes in the first place. Bundling more packages does
-    not fix that either: `@wordpress/components` is a stateful singleton whose
-    version must match DataViews' expectations, and a second copy of a package
-    the host already has re-registers with `private-apis` and throws.
+*   **The runtime guard is not backward compatibility.** `canUseDataForms()`
+    checks for the host singletons and the socket degrades to the standard
+    socket renderer when they are missing, and the DataForm is wrapped in an
+    error boundary that degrades the same way rather than showing a dead panel.
+    That protects against DataViews failing *once loaded*; it cannot help on
+    WordPress 6.8, where the script never executes at all. Enforce the version
+    requirement in PHP, do not rely on this.
 *   **Bundle size.** Bundling DataViews grows the WordPress build from ~119 KB
     to ~255 KB of JS and adds ~89 KB of CSS. A future version should load it on
     demand so pages that do not use the socket pay nothing.
@@ -164,6 +162,42 @@ not resolve with linked or hoisted installs.
     namespace and only nests visually.
 *   The DataForms field API is still stabilising upstream, so treat this socket
     as experimental and keep `@wordpress/dataviews` pinned.
+
+## Enforcing the requirement
+
+Because an unsupported WordPress produces a blank page rather than an error,
+check for support before enqueueing and tell the user what is wrong. Test for the
+capability rather than the version number, so a site running the Gutenberg plugin
+over an older core is judged correctly:
+
+```php
+function myplugin_supports_wp_sockets() {
+	// `wp-theme` is the handle DataViews' dependency chain needs; WordPress 7.0
+	// registers it, 6.8 does not.
+	return wp_script_is( 'wp-theme', 'registered' );
+}
+
+add_action( 'admin_enqueue_scripts', function () {
+	if ( ! myplugin_supports_wp_sockets() ) {
+		return; // Enqueueing anyway prints nothing and renders a blank page.
+	}
+	// ... enqueue as usual
+} );
+
+add_action( 'admin_notices', function () {
+	if ( myplugin_supports_wp_sockets() ) {
+		return;
+	}
+	printf(
+		'<div class="notice notice-error"><p>%s</p></div>',
+		esc_html__( 'My Plugin needs WordPress 7.0 or newer.', 'myplugin' )
+	);
+} );
+```
+
+The `examples/npm-plugin` example in
+[wp-sockets-examples](https://github.com/andreilupu/wp-sockets-examples) does
+exactly this.
 
 ## Data helper API: `setSettings`
 
