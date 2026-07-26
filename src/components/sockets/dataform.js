@@ -23,6 +23,8 @@ import {
 	DataHelperContext,
 	SocketListContext,
 } from './../../contexts';
+import { SocketErrorBoundary } from './../SocketErrorBoundary';
+import { canUseDataForms } from './../../dataform/capability';
 import { compileSockets, NATIVE_TYPE_MAP } from './../../dataform/compile';
 
 /**
@@ -144,15 +146,40 @@ const DataFormSocket = ( { options } ) => {
 		} );
 	};
 
+	/*
+	 * The whole socket list rendered the ordinary way. Used on WordPress
+	 * versions that cannot run DataViews, and as the error-boundary fallback so
+	 * an unexpected DataForms failure degrades to a working form instead of a
+	 * dead panel.
+	 *
+	 * This substitution is only possible because `dataform` is a presentation
+	 * choice, not a data contract: its children are ordinary sockets writing to
+	 * the same value namespace, so the same configuration renders either way.
+	 */
+	const legacy = RenderSocketList ? (
+		<RenderSocketList sockets={ children } />
+	) : null;
+
+	if ( ! canUseDataForms() ) {
+		return (
+			<div className="wp-sockets-dataform wp-sockets-dataform--legacy">
+				{ label && <h3>{ label }</h3> }
+				{ legacy }
+			</div>
+		);
+	}
+
 	return (
 		<div className="wp-sockets-dataform">
 			{ label && <h3>{ label }</h3> }
-			<DataForm
-				data={ data }
-				fields={ resolvedFields }
-				form={ form }
-				onChange={ onChange }
-			/>
+			<SocketErrorBoundary fallback={ legacy }>
+				<DataForm
+					data={ data }
+					fields={ resolvedFields }
+					form={ form }
+					onChange={ onChange }
+				/>
+			</SocketErrorBoundary>
 			{ /* Sockets DataForms cannot render fall back to the legacy path. */ }
 			{ unsupported.length > 0 && RenderSocketList && (
 				<div className="wp-sockets-dataform__fallback">

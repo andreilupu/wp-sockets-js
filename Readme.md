@@ -131,11 +131,31 @@ not resolve with linked or hoisted installs.
 
 ### Requirements and caveats
 
-*   **Recent WordPress only.** DataViews is not shipped by WordPress, so it is
-    bundled into this package. Its dependency chain needs the `wp-theme` and
-    `wp-private-apis` script handles, which exist in WordPress 7.x but not in
-    6.0. The rest of the framework keeps its existing floor — only this socket
-    needs a modern WordPress.
+*   **This build requires WordPress 7.0 or newer — for the whole framework, not
+    just this socket.** Read this before shipping.
+
+    DataViews is not shipped by WordPress, so it is bundled here. Its dependency
+    chain needs the `wp-theme` script handle: WordPress 7.0 registers it, 6.8
+    does not (`wp-includes/js/dist/theme.min.js` appears in 7.0 and is absent in
+    6.8). Because dependency extraction lists `wp-theme` in the generated asset
+    file, WordPress 6.8 refuses to print the script *and silently skips its
+    entire dependency chain* — verified on 6.8: no script tag, no inline
+    bootstrap, `window.wp.components` undefined, nothing renders on the page at
+    all. Not only the `dataform` socket: **the whole admin app.**
+
+    So including this socket in the default build raises the framework's floor.
+    Supporting older WordPress requires shipping DataViews as a separate,
+    conditionally enqueued build — which this version does not yet do.
+
+*   **The runtime guard does not rescue old WordPress.** `canUseDataForms()`
+    checks the host globals and the socket degrades to the standard renderer
+    when they are missing, and the DataForm is wrapped in an error boundary that
+    also degrades rather than showing a dead panel. That is real protection
+    against DataViews failing *once loaded* — but it cannot help on 6.8, where
+    the script never executes in the first place. Bundling more packages does
+    not fix that either: `@wordpress/components` is a stateful singleton whose
+    version must match DataViews' expectations, and a second copy of a package
+    the host already has re-registers with `private-apis` and throws.
 *   **Bundle size.** Bundling DataViews grows the WordPress build from ~119 KB
     to ~255 KB of JS and adds ~89 KB of CSS. A future version should load it on
     demand so pages that do not use the socket pay nothing.
