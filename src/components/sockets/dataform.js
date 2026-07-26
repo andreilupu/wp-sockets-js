@@ -85,7 +85,10 @@ const DataFormSocket = ( { options } ) => {
 	const resolvedFields = useMemo(
 		() =>
 			fields.map( ( field ) => {
-				if ( NATIVE_TYPE_MAP[ field.socketType ] ) {
+				// Already has a control: either a DataForms type whose default
+				// widget is right, or a named control the compiler assigned
+				// (`textarea`, `toggle`, …). Leave both alone.
+				if ( NATIVE_TYPE_MAP[ field.socketType ] || field.Edit ) {
 					return field;
 				}
 

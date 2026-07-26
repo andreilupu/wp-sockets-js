@@ -128,6 +128,18 @@ What carries over unchanged:
     expressed as DataForms fields, so they are rendered after the form by the
     normal WP Sockets renderer.
 
+### Choosing the control
+
+A DataForms field's `type` is its *data* type and does not by itself pick a
+widget, so `textarea`, `toggle`, `radio` and `toggleGroup` sockets are mapped to
+the matching named DataForms control — a `textarea` socket keeps a multiline
+input rather than degrading to a single-line one. Any socket can also name a
+control explicitly, which wins over the default for its type:
+
+```php
+[ 'id' => 'position', 'type' => 'text', 'control' => 'toggleGroup' ]
+```
+
 ### Stylesheet
 
 The package exports its stylesheet, which also carries the DataViews styles the

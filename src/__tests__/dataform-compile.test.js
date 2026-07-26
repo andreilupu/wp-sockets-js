@@ -158,8 +158,52 @@ describe( 'compileSockets', () => {
 		expect( NATIVE_TYPE_MAP.colorPicker ).toBeUndefined();
 	} );
 
+	it( 'gives a textarea socket the textarea control, not a text input', () => {
+		const { fields } = compileSockets( [
+			{ id: 'body', type: 'textarea', label: 'Body' },
+		] );
+
+		// The data type is still text; only the widget differs.
+		expect( fields[ 0 ].type ).toBe( 'text' );
+		expect( fields[ 0 ].Edit ).toBe( 'textarea' );
+	} );
+
+	it( 'maps the other named controls', () => {
+		const { fields } = compileSockets( [
+			{ id: 'a', type: 'toggle' },
+			{ id: 'b', type: 'radio' },
+			{ id: 'c', type: 'toggleGroup' },
+		] );
+
+		expect( fields.map( ( f ) => [ f.type, f.Edit ] ) ).toEqual( [
+			[ 'boolean', 'toggle' ],
+			[ 'text', 'radio' ],
+			[ 'text', 'toggleGroup' ],
+		] );
+	} );
+
+	it( 'lets a socket name its control explicitly', () => {
+		const { fields } = compileSockets( [
+			{ id: 'x', type: 'text', control: 'toggleGroup' },
+		] );
+
+		expect( fields[ 0 ].Edit ).toBe( 'toggleGroup' );
+	} );
+
+	it( 'leaves plain types without a control so DataForms picks the default', () => {
+		const { fields } = compileSockets( [
+			{ id: 'x', type: 'text' },
+			{ id: 'y', type: 'checkbox' },
+		] );
+
+		expect( fields[ 0 ].Edit ).toBeUndefined();
+		expect( fields[ 1 ].Edit ).toBeUndefined();
+	} );
+
 	it( 'defaults a missing label to the socket id', () => {
-		const { fields } = compileSockets( [ { id: 'no_label', type: 'text' } ] );
+		const { fields } = compileSockets( [
+			{ id: 'no_label', type: 'text' },
+		] );
 		expect( fields[ 0 ].label ).toBe( 'no_label' );
 	} );
 

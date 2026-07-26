@@ -43,6 +43,11 @@ export const NATIVE_TYPE_MAP = {
 	datetime: 'datetime',
 	integer: 'integer',
 	boolean: 'boolean',
+	// Same data types as above, rendered with a different widget — see
+	// NAMED_CONTROLS.
+	toggle: 'boolean',
+	radio: 'text',
+	toggleGroup: 'text',
 };
 
 /**
@@ -53,6 +58,24 @@ export const NATIVE_TYPE_MAP = {
  * field model does not represent.
  */
 export const UNSUPPORTED_TYPES = [ 'repeater', 'object' ];
+
+/**
+ * Socket type -> named DataForms control.
+ *
+ * A DataForms field's `type` is its *data* type, which does not by itself pick a
+ * widget: a `textarea` socket mapped to the `text` type renders as a
+ * single-line input and loses its multiline editing. DataForms accepts a named
+ * control in `Edit` for exactly this, so map the socket types whose widget
+ * differs from the default for their data type.
+ *
+ * A socket may also name a control explicitly with `control`, which wins.
+ */
+export const NAMED_CONTROLS = {
+	textarea: 'textarea',
+	radio: 'radio',
+	toggle: 'toggle',
+	toggleGroup: 'toggleGroup',
+};
 
 /**
  * Is this socket renderable inside a DataForm at all?
@@ -86,6 +109,14 @@ const toField = ( socket ) => {
 		// custom `Edit`; DataForms ignores unknown keys.
 		socketType: socket.type,
 	};
+
+	// A named control, so the widget matches the socket type rather than the
+	// default for its data type. `DataFormSocket` leaves these alone — it only
+	// attaches a filter-backed `Edit` to types it does not recognise.
+	const control = socket.control ?? NAMED_CONTROLS[ socket.type ];
+	if ( control ) {
+		field.Edit = control;
+	}
 
 	if ( socket.description ) {
 		field.description = socket.description;
