@@ -29,6 +29,7 @@
  * error and no emitted CSS. Marking CSS as side-effectful keeps it.
  */
 
+const path = require( 'path' );
 const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );
 const DependencyExtractionWebpackPlugin = require( '@wordpress/dependency-extraction-webpack-plugin' );
 
@@ -50,8 +51,32 @@ const mustBundle = ( request ) =>
 	request === '@wordpress/ui' ||
 	request.startsWith( '@wordpress/dataviews/' );
 
-module.exports = {
+/**
+ * Build one variant.
+ *
+ * Each variant is a separate webpack compilation rather than a second entry in
+ * one config. Two entries would share a single extracted stylesheet, so the
+ * legacy build would inherit the DataViews CSS it has no use for; separate
+ * compilations keep the two sets of assets genuinely independent, which is what
+ * we want given only one of them is ever loaded.
+ *
+ * @param {string} name Entry name, matching a file in `src/`.
+ * @return {Object} A webpack configuration.
+ */
+const variant = ( name ) => ( {
 	...defaultConfig,
+	name,
+	entry: { [ name ]: path.resolve( __dirname, `src/${ name }.js` ) },
+	output: {
+		...defaultConfig.output,
+		/*
+		 * Both variants write to the same directory, and wp-scripts enables
+		 * `clean`. Left on, whichever compilation finishes last deletes the
+		 * other's output — silently, since both still report success. The npm
+		 * script empties the directory once before building instead.
+		 */
+		clean: false,
+	},
 	module: {
 		...defaultConfig.module,
 		rules: [
@@ -63,7 +88,8 @@ module.exports = {
 	plugins: [
 		// Replace the default DEWP instance with one that force-bundles the
 		// packages above. Filtering by constructor name rather than identity
-		// because wp-scripts constructs its own instance.
+		// because wp-scripts constructs its own instance. A fresh instance per
+		// variant, since a plugin instance cannot be shared across compilations.
 		...defaultConfig.plugins.filter(
 			( plugin ) =>
 				plugin.constructor.name !== 'DependencyExtractionWebpackPlugin'
@@ -79,4 +105,16 @@ module.exports = {
 			},
 		} ),
 	],
-};
+} );
+
+/*
+ * Two builds from the same source:
+ *
+ * - `index`        includes the DataViews-backed `dataform` socket and needs
+ *                  WordPress 7.0+.
+ * - `index-legacy` renders `dataform` sockets with the standard socket renderer
+ *                  and never imports DataViews, so it runs on WordPress 6.x —
+ *                  its asset file does not list `wp-theme`, the missing handle
+ *                  that otherwise stops the script loading there.
+ */
+module.exports = [ variant( 'index' ), variant( 'index-legacy' ) ];

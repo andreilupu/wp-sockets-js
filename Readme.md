@@ -16,16 +16,27 @@ A flexible, React-based library for building WordPress Admin Pages using native 
 
 ## Requirements
 
-**WordPress 7.0 or newer.**
+The package ships **two builds**, because core's DataForms cannot run on every
+supported WordPress:
 
-This version bundles core's DataForms (`@wordpress/dataviews`), whose dependency
-chain needs the `wp-theme` script handle — WordPress 7.0 registers it, 6.8 does
-not. On an older WordPress the script's dependency chain cannot resolve, so
-WordPress prints nothing at all and the admin page comes up blank. Host
-integrations should therefore check support before enqueueing and show a notice
-instead; see [Enforcing the requirement](#enforcing-the-requirement).
+| Build | Entry | `dataform` sockets render as | WordPress |
+| --- | --- | --- | --- |
+| Default | `@andreilupu/wp-sockets-js` | core DataForms | **7.0+** |
+| Legacy | `@andreilupu/wp-sockets-js/legacy` | standard socket controls | **6.x** |
 
-If you need to support WordPress 6.x, stay on `0.1.0-alpha.4`.
+DataViews is bundled (WordPress does not ship it), and its dependency chain needs
+the `wp-theme` script handle — WordPress 7.0 registers it, 6.8 does not. The
+legacy build never imports DataViews, so its generated asset file lists only
+handles that have existed for years. It is also far smaller: ~12 KB of JS and
+under 1 KB of CSS, against ~260 KB and ~90 KB.
+
+**Pick per request in PHP** — see [Choosing a build](#choosing-a-build). Getting
+it wrong is not a soft failure: WordPress silently declines to print a script
+whose declared dependency is missing, and skips its whole dependency chain, so
+the default build on 6.x renders a blank page.
+
+The same socket configuration works against either build, so you write your
+settings once.
 
 ## Installation
 
@@ -156,60 +167,74 @@ not resolve with linked or hoisted installs.
 
 ### Requirements and caveats
 
-*   **Needs WordPress 7.0+**, like the rest of this version — see
+*   **Needs the default build, so WordPress 7.0+** — on 6.x the legacy build
+    renders the same children with standard controls. See
     [Requirements](#requirements).
-
-*   **The runtime guard is not backward compatibility.** `canUseDataForms()`
-    checks for the host singletons and the socket degrades to the standard
-    socket renderer when they are missing, and the DataForm is wrapped in an
-    error boundary that degrades the same way rather than showing a dead panel.
-    That protects against DataViews failing *once loaded*; it cannot help on
-    WordPress 6.8, where the script never executes at all. Enforce the version
-    requirement in PHP, do not rely on this.
-*   **Bundle size.** Bundling DataViews grows the WordPress build from ~119 KB
-    to ~255 KB of JS and adds ~89 KB of CSS. A future version should load it on
-    demand so pages that do not use the socket pay nothing.
+*   **The runtime guard is not the version story.** `canUseDataForms()` checks
+    for the host singletons and degrades to the standard socket renderer if they
+    are missing, and the DataForm is wrapped in an error boundary that degrades
+    the same way rather than showing a dead panel. That protects against
+    DataViews failing *once loaded*. It cannot rescue the default build on 6.x,
+    where the script never executes at all — that is what the legacy build is
+    for.
+*   **Bundle size.** DataViews costs ~250 KB of JS and ~89 KB of CSS, and every
+    page using the default build pays it even if it has no `dataform` socket.
+    Splitting DataViews into a separately enqueued chunk is still worth doing.
 *   **Values are flattened.** DataForms keeps a flat field list, so a `group`
     nested inside a `dataform` contributes its children to the same value
     namespace and only nests visually.
+*   **`repeater` and `object` children** cannot be expressed as DataForms fields,
+    so they render after the form via the standard renderer.
+*   **Asynchronous `choices`** (a resolver function, mapped to DataForms'
+    `getElements`) only work in the default build. The legacy `select` socket
+    takes a static list and renders an empty control for a resolver.
 *   The DataForms field API is still stabilising upstream, so treat this socket
     as experimental and keep `@wordpress/dataviews` pinned.
 
-## Enforcing the requirement
+## Choosing a build
 
-Because an unsupported WordPress produces a blank page rather than an error,
-check for support before enqueueing and tell the user what is wrong. Test for the
-capability rather than the version number, so a site running the Gutenberg plugin
-over an older core is judged correctly:
+Build both variants and enqueue whichever the current WordPress can run. Test
+for the capability rather than comparing `$wp_version`, so a site running the
+Gutenberg plugin over an older core is judged correctly:
 
 ```php
-function myplugin_supports_wp_sockets() {
-	// `wp-theme` is the handle DataViews' dependency chain needs; WordPress 7.0
-	// registers it, 6.8 does not.
-	return wp_script_is( 'wp-theme', 'registered' );
+/**
+ * `wp-theme` is the handle DataViews' dependency chain needs; WordPress 7.0
+ * registers it, 6.8 does not.
+ */
+function myplugin_asset_name() {
+	return wp_script_is( 'wp-theme', 'registered' ) ? 'index' : 'index-legacy';
 }
 
 add_action( 'admin_enqueue_scripts', function () {
-	if ( ! myplugin_supports_wp_sockets() ) {
-		return; // Enqueueing anyway prints nothing and renders a blank page.
-	}
-	// ... enqueue as usual
-} );
+	$asset      = myplugin_asset_name();
+	$asset_file = include plugin_dir_path( __FILE__ ) . "build/{$asset}.asset.php";
 
-add_action( 'admin_notices', function () {
-	if ( myplugin_supports_wp_sockets() ) {
-		return;
-	}
-	printf(
-		'<div class="notice notice-error"><p>%s</p></div>',
-		esc_html__( 'My Plugin needs WordPress 7.0 or newer.', 'myplugin' )
+	wp_enqueue_script(
+		'myplugin',
+		plugin_dir_url( __FILE__ ) . "build/{$asset}.js",
+		$asset_file['dependencies'],
+		$asset_file['version'],
+		true
+	);
+	wp_enqueue_style(
+		'myplugin',
+		plugin_dir_url( __FILE__ ) . "build/{$asset}.css",
+		[ 'wp-components' ],
+		$asset_file['version']
 	);
 } );
 ```
 
+On the JavaScript side, have two entry points — one importing
+`@andreilupu/wp-sockets-js`, the other `@andreilupu/wp-sockets-js/legacy` (and
+its `legacy/style.css`) — and build each as its own webpack compilation. Two
+entries in a single config share one extracted stylesheet, which would hand the
+legacy build the DataViews CSS it has no use for.
+
 The `examples/npm-plugin` example in
 [wp-sockets-examples](https://github.com/andreilupu/wp-sockets-examples) does
-exactly this.
+exactly this, including the webpack configuration.
 
 ## Data helper API: `setSettings`
 
